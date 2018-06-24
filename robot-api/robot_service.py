@@ -1,3 +1,5 @@
+import motor 
+
 
 class RobotService:
     DEFAULT_SPEED = 30
@@ -6,9 +8,11 @@ class RobotService:
 
     def __init__(self, speed=DEFAULT_SPEED):
         self.speed = speed
+        self.motor = motor.Motor()
 
     def move_forward(self):
-        print("MOVE FORWARD")
+        motor.forward()
+        print("MOVE FORWARD")        
 
     def move_backward(self):
         print("MOVE BACKWARD")
