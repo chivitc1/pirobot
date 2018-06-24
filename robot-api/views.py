@@ -54,6 +54,13 @@ def change_speed():
     print('Current real speed: ' + str(real_speed))
     return jsonify({'speed': real_speed})
 
-
+def cleanup():
+    robot.cleanup()
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8090)
+    try:
+        app.run(host='0.0.0.0', port=8090)
+    # If you press CTRL + C, cleanup and stop
+    except KeyboardInterrupt:
+        # Reset GPIO settings
+        print('Clean up PI GPIO pins')
+        cleanup()

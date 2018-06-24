@@ -1,39 +1,47 @@
 import motor 
-
+import distance
 
 class RobotService:
-    DEFAULT_SPEED = 30
-    MAX_SPEED = 50
-    MIN_SPEED = 15
 
-    def __init__(self, speed=DEFAULT_SPEED):
-        self.speed = speed
+    def __init__(self):        
         self.motor = motor.Motor()
+        self.ir = distance.Ir()
 
     def move_forward(self):
-        motor.forward()
+        self.motor.forward()
         print("MOVE FORWARD")        
 
     def move_backward(self):
+        self.motor.back()
         print("MOVE BACKWARD")
 
     def turn_left(self):
+        self.motor.left()
         print("TURN LEFT")
 
     def turn_right(self):
+        self.motor.right()
         print("TURN RIGHT")
 
     def stop(self):
+        self.motor.stop()
         print("STOP")
 
-    def change_speed(self, sp):
-        print("CHANGE SPEED")
-        if self.MIN_SPEED <= sp <= self.MAX_SPEED:
-            self.speed = sp
-        else:
-            self.speed = self.DEFAULT_SPEED
-        return self.speed
+    def change_speed(self, sp):        
+        real_speed = self.motor.set_speed(sp)
+        print("AT SPEED: " + str(real_speed))
+        return real_speed
 
     def get_distance(self):
-        print("GET DISTANCE")
-        return 20
+        MEASURE_SLEEP = 0.005
+        MEASURE_COUNT = 3
+        samples = set()
+        for i in range(MEASURE_COUNT):
+            d = self.ir.get_distance()
+            samples.add(d)
+            self.ir.sleep(MEASURE_SLEEP)
+        d = round(min(samples), 1)
+        return d
+    
+    def cleanup(self):
+        self.motor.cleanup()

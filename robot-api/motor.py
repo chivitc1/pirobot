@@ -23,10 +23,14 @@ FREQUENCY = 50
 DUTY_CYCLE_A = 30.0
 DUTY_CYCLE_B = 30.0
 
+DEFAULT_SPEED = 30
+MAX_SPEED = 50
+MIN_SPEED = 15
+
 class Motor:
-    def __init__(self):        
-        self.setup()
-        
+    def __init__(self):
+        self.speed = DEFAULT_SPEED
+        self.setup()     
         
     def setup(self):
         # Set pin numbering by board
@@ -76,34 +80,25 @@ class Motor:
     # Turn right
     def right(self):
         self.drive(TURN_RIGHT)
+        
+    def set_speed(self, sp):        
+        if self.MIN_SPEED <= sp <= self.MAX_SPEED:
+            self.speed = sp
+        else:
+            self.speed = self.DEFAULT_SPEED
+        DUTY_CYCLE_A = sp
+        DUTY_CYCLE_B = sp
+        return self.speed
     
+    def set_speed_a(self, sp):
+        DUTY_CYCLE_A = sp
+    
+    def set_speed_b(self, sp):
+        DUTY_CYCLE_B = sp
+        
+    def sleep(self, seconds):
+        time.sleep(seconds)
+        
     def cleanup(self):
         GPIO.cleanup()
 
-# code to control your robot
-def test():
-    motor = Motor()
-    try:
-        SLEEP = 0.3        
-        motor.forward()
-        time.sleep(SLEEP) # pause
-
-##        left()
-##        time.sleep(SLEEP) # pause for 0.5 second
-    
-##        forward()
-##        time.sleep(SLEEP)
-    
-##        right()
-##        time.sleep(SLEEP)
-##    
-##        back()
-##        time.sleep(SLEEP)
-
-        motor.stopMotors()
-    finally:
-        # reset GPIO to origin
-        motor.cleanup()
-    
-# call functions to test
-#test()
