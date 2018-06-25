@@ -1,11 +1,17 @@
 import motor 
 import distance
 
+
 class RobotService:
 
     def __init__(self):        
         self.motor = motor.Motor()
         self.ir = distance.Ir()
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(RobotService, cls).__new__(cls)
+        return cls.instance
 
     def move_forward(self):
         self.motor.forward()

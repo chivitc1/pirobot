@@ -58,9 +58,8 @@ def cleanup():
     robot.cleanup()
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=8090)
+        app.run(host='0.0.0.0', port=8090, threaded=True)
     # If you press CTRL + C, cleanup and stop
     except KeyboardInterrupt:
         # Reset GPIO settings
-        print('Clean up PI GPIO pins')
         cleanup()

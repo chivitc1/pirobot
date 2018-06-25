@@ -27,11 +27,19 @@ DEFAULT_SPEED = 30
 MAX_SPEED = 50
 MIN_SPEED = 15
 
+
 class Motor:
     def __init__(self):
         self.speed = DEFAULT_SPEED
-        self.setup()     
-        
+        self.motorA = None
+        self.motorB = None
+        self.setup()
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(Motor, cls).__new__(cls)
+        return cls.instance
+
     def setup(self):
         # Set pin numbering by board
         GPIO.setmode(GPIO.BOARD)
