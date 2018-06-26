@@ -7,14 +7,36 @@ from flask_cors import CORS
 import time
 import RPi.GPIO as GPIO
 
-######################### MOTOR SETTINGS ###############
+######################### COMMON
 ON = 1; OFF = 0;
+# Set pin numbering by board
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
 
+
+######################### PINS
 # Motor control pins
 FORWARD_A = 18; BACK_A = 16; ENABLE_A = 12;
 FORWARD_B = 13; BACK_B = 15; ENABLE_B = 33;
-PINS = [FORWARD_A, FORWARD_B, BACK_A, BACK_B]
 
+GPIO.setup(FORWARD_A, GPIO.OUT)
+GPIO.setup(BACK_A, GPIO.OUT)
+GPIO.setup(ENABLE_A, GPIO.OUT)
+
+GPIO.setup(FORWARD_B, GPIO.OUT)
+GPIO.setup(BACK_B, GPIO.OUT)
+GPIO.setup(ENABLE_B, GPIO.OUT)
+    
+# Define pins out/int for SRC04 distance sensor
+PIN_TRIGGER = 7
+PIN_ECHO = 11
+
+GPIO.setup(PIN_TRIGGER, GPIO.OUT)
+GPIO.setup(PIN_ECHO, GPIO.IN)
+
+######################### MOTOR SETTINGS ###############
+
+PINS = [FORWARD_A, FORWARD_B, BACK_A, BACK_B]
 # Move action states
 MOVE_FWD = [ON, ON, OFF, OFF]
 MOVE_BACK = [OFF, OFF, ON, ON]
@@ -35,45 +57,24 @@ MAX_SPEED = 50
 MIN_SPEED = 15
 
 speed = DEFAULT_SPEED
-motorA = None
-motorB = None
+# Set frequency for motor driver pins
+motorA = GPIO.PWM(ENABLE_A, FREQUENCY)
+motorB = GPIO.PWM(ENABLE_B, FREQUENCY)
+# Start software PWM with duty cycle 0 (not moving)
+motorA.start(0)
+motorB.start(0)
 
 
 ################################# IR distance setting #############
 
-ON = 1; OFF = 0;
 DISTANCE_SLEEP = 0.05
 TOO_CLOSE_THRESHOLD_TIME = 0.04
 
 # Speed of sound as cm/s
 SPEED_OF_SOUND = 34326
 
-# Define pins out/int for SRC04 distance sensor
-PIN_TRIGGER = 7
-PIN_ECHO = 11
-
 
 ##################################### motor func ###########
-def setup_motor():
-    # Set pin numbering by board
-    GPIO.setmode(GPIO.BOARD)
-    GPIO.setwarnings(False)
-    # Set the pins to be output pins
-    GPIO.setup(FORWARD_A, GPIO.OUT)
-    GPIO.setup(BACK_A, GPIO.OUT)
-    GPIO.setup(ENABLE_A, GPIO.OUT)
-
-    GPIO.setup(FORWARD_B, GPIO.OUT)
-    GPIO.setup(BACK_B, GPIO.OUT)
-    GPIO.setup(ENABLE_B, GPIO.OUT)
-
-    # Set frequency for motor driver pins
-    motorA = GPIO.PWM(ENABLE_A, FREQUENCY)
-    motorB = GPIO.PWM(ENABLE_B, FREQUENCY)
-    # Start software PWM with duty cycle 0 (not moving)
-    motorA.start(0)
-    motorB.start(0)
-
 
 # Turn all motors off
 def stop_motors():
@@ -121,10 +122,11 @@ def set_speed(sp):
 ##################################### END motor func ###########
 
 ##################################### IR distance func #########
-def setup_ir():
-    GPIO.setup(PIN_TRIGGER, GPIO.OUT)
-    GPIO.setup(PIN_ECHO, GPIO.IN)
-
+def get_distance2():
+    print("IN")
+    time.sleep(2)
+    print("OUT")
+    return jsonify({'distance': distance})
 
 def get_distance():
     """get obstacle distance
@@ -160,7 +162,7 @@ def get_distance():
     # Calculate puls length
     elapsedTime = stopTime - startTime
     distance = (elapsedTime * SPEED_OF_SOUND) / 2
-    return distance
+    return jsonify({'distance': distance})
 
 ##################################### END IR distance func #########
 ##################################### Web API ################
@@ -200,7 +202,7 @@ def stop():
 
 @app.route('/api/distance')
 def distance():
-    d = get_distance()
+    d = get_distance2()
     return jsonify({'distance': d})
 
 
@@ -208,24 +210,10 @@ def distance():
 def change_speed():
     sp = request.get_json().get('speed')
     print('Request speed at: ' + str(sp))
-    real_speed = change_speed(sp)
+    real_speed = set_speed(sp)
     print('Current real speed: ' + str(real_speed))
     return jsonify({'speed': real_speed})
 
-
-# @app.route('/', methods=["GET"])
-# def api_root():
-#     return {
-#         "led_url": request.url + "led/(green | red)/",
-#         "led_url_POST": {"state": "(0 | 1)"}
-#     }
-#
-#
-# @app.route('/led/<color>/', methods=["POST"])
-# def api_leds_control(color):
-#     if color in LEDS:
-#         GPIO.output(LEDS[color], int(request.data.get("state")))
-#     return {color: GPIO.input(LEDS[color])}
 
 ################################### END Web API################
 
@@ -234,9 +222,7 @@ def change_speed():
 
 try:
     GPIO.setwarnings(False)
-    setup_motor()
-    setup_ir()
     if __name__ == "__main__":
-        app.run(host='0.0.0.0', port=8090, threaded=True, debug=False)
+        app.run(host='0.0.0.0', port=8090, threaded=True, debug=True)
 finally:
     GPIO.cleanup()
