@@ -124,9 +124,14 @@ def set_speed(sp):
 ##################################### IR distance func #########
 def get_distance2():
     print("IN")
-    time.sleep(2)
+    try:
+        time.sleep(2)
+    except:
+        print("exception:")
+    finally:
+        print("Finish")
     print("OUT")
-    return jsonify({'distance': distance})
+    return 10
 
 def get_distance():
     """get obstacle distance
@@ -162,7 +167,7 @@ def get_distance():
     # Calculate puls length
     elapsedTime = stopTime - startTime
     distance = (elapsedTime * SPEED_OF_SOUND) / 2
-    return jsonify({'distance': distance})
+    return distance
 
 ##################################### END IR distance func #########
 ##################################### Web API ################
@@ -202,7 +207,7 @@ def stop():
 
 @app.route('/api/distance')
 def distance():
-    d = get_distance2()
+    d = get_distance()
     return jsonify({'distance': d})
 
 
@@ -223,6 +228,6 @@ def change_speed():
 try:
     GPIO.setwarnings(False)
     if __name__ == "__main__":
-        app.run(host='0.0.0.0', port=8090, threaded=True, debug=True)
+        app.run(host='0.0.0.0', port=8090, threaded=True, debug=False)
 finally:
     GPIO.cleanup()
