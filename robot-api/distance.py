@@ -34,37 +34,29 @@ class Ir:
         
     def get_distance(self):
         """get obstacle distance
-        """    
-        # Set trigger to OFF (low)
-        GPIO.output(PIN_TRIGGER, OFF)
-
-        # Allow module to settle
-        time.sleep(DISTANCE_SLEEP)
-
+        """
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setwarnings(False)
+        GPIO.setup(PIN_TRIGGER, GPIO.OUT)
+        GPIO.setup(PIN_ECHO, GPIO.IN)
         # Send 10us pulse to trigger pin
         GPIO.output(PIN_TRIGGER, ON)
         time.sleep(0.00001)
         GPIO.output(PIN_TRIGGER, OFF)
-
+        
         # Start the timer
         startTime = time.time()
+        stop = startTime
+        start = startTime
 
         # start time is reset until Echo pin is high
-        while GPIO.input(PIN_ECHO) == 0:
-            startTime = time.time()
+        while GPIO.input(PIN_ECHO) == 0 and start < startTime + 2:
+            start = time.time()
 
         # Stop when Echo pin is no longer high
-        while GPIO.input(PIN_ECHO) == 1:
-            stopTime = time.time()
-            # If sensor is too close to object, pi cannot see the echo quickly enough
-            # so it has to detect that problem and say what has happened
-            if stopTime - startTime >= TOO_CLOSE_THRESHOLD_TIME:
-                print("Hold on there! You're too close for me to see.")
-                stopTime = startTime
-                break
-            
-        # Calculate puls length
-        elapsedTime = stopTime - startTime
+        while GPIO.input(PIN_ECHO) == 1 and stop < startTime + 2:
+            stop = time.time()
+        elapsedTime = stop - start
         distance = (elapsedTime * SPEED_OF_SOUND) / 2
         return distance
         

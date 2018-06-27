@@ -34,6 +34,9 @@ PIN_ECHO = 11
 GPIO.setup(PIN_TRIGGER, GPIO.OUT)
 GPIO.setup(PIN_ECHO, GPIO.IN)
 
+IR_RETRIES = 5
+IR_MAX = 70
+IR_MIN = 0
 ######################### MOTOR SETTINGS ###############
 
 PINS = [FORWARD_A, FORWARD_B, BACK_A, BACK_B]
@@ -122,51 +125,38 @@ def set_speed(sp):
 ##################################### END motor func ###########
 
 ##################################### IR distance func #########
-def get_distance2():
-    print("IN")
-    try:
-        time.sleep(2)
-    except:
-        print("exception:")
-    finally:
-        print("Finish")
-    print("OUT")
-    return 10
 
 def get_distance():
     """get obstacle distance
     """
-    # Set trigger to OFF (low)
-    GPIO.output(PIN_TRIGGER, OFF)
-
-    # Allow module to settle
-    time.sleep(DISTANCE_SLEEP)
-
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setwarnings(False)
+    GPIO.setup(PIN_TRIGGER, GPIO.OUT)
+    GPIO.setup(PIN_ECHO, GPIO.IN)
+        
+    # Wait sensor to settle
+    time.sleep(1)
     # Send 10us pulse to trigger pin
     GPIO.output(PIN_TRIGGER, ON)
     time.sleep(0.00001)
     GPIO.output(PIN_TRIGGER, OFF)
 
     # Start the timer
-    startTime = time.time()
+    start_time = time.time()
+    start = start_time
+    stop = start_time
 
     # start time is reset until Echo pin is high
-    while GPIO.input(PIN_ECHO) == 0:
-        startTime = time.time()
+    while GPIO.input(PIN_ECHO) == 0 and start < start_time + 2:
+        start = time.time()
 
     # Stop when Echo pin is no longer high
-    while GPIO.input(PIN_ECHO) == 1:
-        stopTime = time.time()
-        # If sensor is too close to object, pi cannot see the echo quickly enough
-        # so it has to detect that problem and say what has happened
-        if stopTime - startTime >= TOO_CLOSE_THRESHOLD_TIME:
-            print("Hold on there! You're too close for me to see.")
-            stopTime = startTime
-            break
-
+    while GPIO.input(PIN_ECHO) == 1 and stop < start_time + 2:
+        stop = time.time()
+    
     # Calculate puls length
-    elapsedTime = stopTime - startTime
-    distance = (elapsedTime * SPEED_OF_SOUND) / 2
+    elapsed_time = stop - start
+    distance = (elapsed_time * SPEED_OF_SOUND) / 2
     return distance
 
 ##################################### END IR distance func #########
@@ -206,8 +196,14 @@ def stop():
 
 
 @app.route('/api/distance')
-def distance():
-    d = get_distance()
+def distance():    
+    for i in range(IR_RETRIES):
+        d = get_distance()
+        if (d > IR_MIN and d < IR_MAX):
+            break;
+        # time.sleep(0.005)
+    if (d <= IR_MIN or d >= IR_MAX):
+        raise ValueError('Bad thing happened to IR. Could not measure distance')
     return jsonify({'distance': d})
 
 
