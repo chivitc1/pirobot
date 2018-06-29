@@ -34,7 +34,7 @@ PIN_ECHO = 11
 GPIO.setup(PIN_TRIGGER, GPIO.OUT)
 GPIO.setup(PIN_ECHO, GPIO.IN)
 
-IR_RETRIES = 5
+IR_RETRIES = 1
 IR_MAX = 70
 IR_MIN = 0
 ######################### MOTOR SETTINGS ###############
@@ -148,7 +148,7 @@ def get_distance():
 
     # start time is reset until Echo pin is high
     while GPIO.input(PIN_ECHO) == 0 and start < start_time + 2:
-        start = time.time()
+        start = time.time()        
 
     # Stop when Echo pin is no longer high
     while GPIO.input(PIN_ECHO) == 1 and stop < start_time + 2:
@@ -203,7 +203,8 @@ def distance():
             break;
         # time.sleep(0.005)
     if (d <= IR_MIN or d >= IR_MAX):
-        raise ValueError('Bad thing happened to IR. Could not measure distance')
+        #raise ValueError('Bad thing happened to IR. Could not measure distance')
+        d = 1000
     return jsonify({'distance': d})
 
 
@@ -224,6 +225,6 @@ def change_speed():
 try:
     GPIO.setwarnings(False)
     if __name__ == "__main__":
-        app.run(host='0.0.0.0', port=8090, threaded=True, debug=False)
+        app.run(host='0.0.0.0', port=8090, threaded=True, debug=True)
 finally:
     GPIO.cleanup()
