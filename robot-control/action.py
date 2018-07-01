@@ -1,9 +1,10 @@
 import apiproxy
 import time
+from random import randint
 
 STEP_SLEEP = 0.5
 ROTATE_SLEEP = 0.5
-BACK_SLEEP = 0.5
+BACK_SLEEP = 1
 
 
 def forward(duration):
@@ -22,7 +23,12 @@ def forward(duration):
 
         if d <= 15:
             back(BACK_SLEEP)
-            rotate('LEFT')
+            number = randint(1, 2)
+            if number == 1:
+                direction = 'LEFT'
+            else:
+                direction = 'RIGHT'
+            rotate(direction)
 
 
 def stop():
@@ -34,8 +40,11 @@ def get_distance():
 
 
 def rotate(direction):
-    while direction == 'LEFT':
-        apiproxy.left()
+    while True:
+        if direction == 'LEFT':
+            apiproxy.left()
+        else:
+            apiproxy.right()
         time.sleep(ROTATE_SLEEP)
         apiproxy.stop()
         d = apiproxy.get_distance()

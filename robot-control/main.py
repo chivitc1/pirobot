@@ -1,6 +1,6 @@
 import action
 
-TEST_TIME = 60
+TEST_TIME = 160
 
 
 def test_go():
